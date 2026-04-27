@@ -1,25 +1,61 @@
-import { useEffect , useState} from 'react';
+import { useParams } from 'react-router';
 import Content from './Content';
 import Comments from './Comments';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 
 function BlogPost(){
-    const postContent={
-        title:'My First Blog Post',
-        content:'This is the content of my first blog post. Welcome to my blog! Hope you enjoy reading it.',
-        author:'John Doe',
-        date:'2026-03-20',
-    };
+    const params=useParams();
+
+    const [loading, setLoading] = useState(true);
+    const [postData, setPostData] = useState();
+    const [authorData, setAuthorData] = useState();
+
+    console.log(postData, authorData);
+    
+    console.log(postData);
+
+    useEffect(() => {
+        const fetchData=async () => {
+            try {
+                const postRes = await axios.get(
+                    `https://jsonplaceholder.typicode.com/posts/${params.post_id}`
+                );
+                setPostData(postRes.data);
+
+                const authorRes = await axios.get(
+                    `https://jsonplaceholder.typicode.com/users/${postRes.data.userId}`
+                );
+                setAuthorData(authorRes.data);
+            } 
+            catch (e){
+                console.log(e);
+            }
+            finally{
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    
 
     return (
         <div  className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-8 mb-8">
-            <Content
-                title={postContent.title}
-                content={postContent.content}
-                date={postContent.date}
-                author={postContent.author}
-            />
-            <Comments />
+            {loading ? (
+                <p>Loading</p>
+            ) : (
+                <>
+                    <Content
+                        title={postData.title}
+                        content={postData.content}
+                        author={authorData.name}
+                    />
+                    <Comments />
+                </>
+            )}
         </div>
     );
 }
